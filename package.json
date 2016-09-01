@@ -10,12 +10,11 @@
   "author": "Samuel Loh Yin Kang <samuel.loh.yk@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "bluebird": "^3.4.1",
-    "cookie": "^0.3.1",
+    "bluebird": "^3.4.5",
+    "generic-pool": "^2.4.2",
     "lodash": "^4.15.0",
-    "qs": "^6.2.1",
     "sprintf-js": "^1.0.3",
-    "superagent": "^2.2.0"
+    "ssh2": "^0.5.1"
   },
   "devDependencies": {
     "jsdoc": "^3.4.0"
