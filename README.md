@@ -1,1 +1,1 @@
-HTTP Request Utility that uses Bluebird Promises
+SSH2 Client Library that uses Bluebird Promises
