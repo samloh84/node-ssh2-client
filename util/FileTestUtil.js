@@ -1,6 +1,12 @@
 const fs = require('fs');
 const _path = require('path');
 const _ = require('lodash');
+
+
+const SSH2_CLIENT_UTIL_TEST_TMP_DIR_ROOT = _.get(process, 'env.SSH2_CLIENT_UTIL_TEST_TMP_DIR_ROOT', '/tmp');
+const SSH2_CLIENT_UTIL_TEST_TMP_DIR_PREFIX = _.get(process, 'env.SSH2_CLIENT_UTIL_TEST_TMP_DIR_ROOT', 'Ssh2ClientUtil-');
+
+
 var FileTestUtil = {};
 FileTestUtil.randomString = function (length) {
     if (_.isNil(length)) {
@@ -17,7 +23,7 @@ FileTestUtil.randomString = function (length) {
 
 FileTestUtil.mkdtemp = function (prefix) {
     if (_.isNil(prefix)) {
-        prefix = '/tmp/FileUtilSpecs-';
+        prefix = _path.resolve(SSH2_CLIENT_UTIL_TEST_TMP_DIR_ROOT, SSH2_CLIENT_UTIL_TEST_TMP_DIR_PREFIX);
     }
 
     return fs.mkdtempSync(prefix);
@@ -27,7 +33,7 @@ FileTestUtil.mkdir = function (path) {
     try {
         return fs.mkdirSync(path);
     } catch (err) {
-        if (err.code !== 'EEXIST'&&err.code !== 17) {
+        if (err.code !== 'EEXIST' && err.code !== 17) {
             throw err;
         }
         return null;
