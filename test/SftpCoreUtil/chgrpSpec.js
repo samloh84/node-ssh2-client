@@ -79,7 +79,7 @@ describe("CoreUtil", function () {
                 FileTestUtil.writeFileSync(tempFile, tempFileContents, {mode: SftpUtil.constants.S_IRWXU | SftpUtil.constants.S_IRWXG});
             });
 
-            it("should change the mode of a file", function () {
+            it("should change the uid & gid of a file", function () {
                 var variables = this;
                 var ssh2Client = variables.ssh2Client;
                 var sftpCoreUtil = variables.sftpCoreUtil;
@@ -124,7 +124,7 @@ describe("CoreUtil", function () {
                 }
             });
 
-            it("should change the mode of all files", function () {
+            it("should change the uid & gid all files", function () {
                 var variables = this;
                 var ssh2Client = variables.ssh2Client;
                 var sftpCoreUtil = variables.sftpCoreUtil;

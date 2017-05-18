@@ -63,7 +63,7 @@ describe("SftpUtil", function () {
                 });
         });
 
-        it("should change the uid and gid of a file", function () {
+        it("should change the uid & gid of a file", function () {
             var variables = this;
             var ssh2Client = variables.ssh2Client;
             var sftpUtil = variables.sftpUtil;
