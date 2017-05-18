@@ -1,1 +1,1 @@
-SSH2 Client Library that uses Bluebird Promises
+SSH2 Client Utility that wraps the [mscdex ssh2](https://github.com/mscdex/ssh2) library in Bluebird Promises, along with implementations of some GNU Core Utilities.
