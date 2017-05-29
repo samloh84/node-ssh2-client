@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "jsdoc": "node_modules/.bin/jsdoc --configure jsdoc.conf.json ./",
-    "test": "node_modules/.bin/mocha --recursive"
+    "test": "node_modules/.bin/mocha"
   },
   "author": "Samuel Loh Yin Kang <samuel.loh.yk@gmail.com>",
   "license": "MIT",
