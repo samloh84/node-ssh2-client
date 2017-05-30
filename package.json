@@ -1,11 +1,11 @@
 {
   "name": "@lohsy84/ssh2-client",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "SSH2 Client Utility that wraps the mscdex ssh2 library in Bluebird Promises, along with implementations of some GNU Core Utilities.",
   "main": "index.js",
   "scripts": {
     "jsdoc": "node_modules/.bin/jsdoc --configure jsdoc.conf.json ./",
-    "test": "node_modules/.bin/mocha --recursive"
+    "test": "node_modules/.bin/mocha"
   },
   "author": "Samuel Loh Yin Kang <samuel.loh.yk@gmail.com>",
   "license": "MIT",

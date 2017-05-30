@@ -1,86 +1,35 @@
 const Promise = require('bluebird');
-const mocha = require('mocha');
-const describe = mocha.describe,
-    it = mocha.it,
-    before = mocha.before,
-    beforeEach = mocha.beforeEach,
-    after = mocha.after,
-    afterEach = mocha.afterEach;
-const chai = require("chai");
+
 const util = require('util');
 const fs = require('fs');
 const _path = require('path');
 const _ = require('lodash');
-const Ssh2ClientUtil = require('../../lib').Ssh2ClientUtil;
-const SftpUtil = require('../../lib').SftpUtil;
-const FileTestUtil = require('../../util/FileTestUtil');
-const Ssh2ClientUtilTestUtil = require('../../util/Ssh2ClientUtilTestUtil');
-const chaiAsPromised = require("chai-as-promised");
-
-chaiAsPromised.transferPromiseness = function (assertion, promise) {
-    _.each(Promise.prototype, function (fn, fnName) {
-        if (_.isFunction(fn)) {
-            _.set(assertion, fnName, fn.bind(Promise.resolve(promise)));
-        }
-    });
-};
-
-chai.use(chaiAsPromised);
-chai.should();
-chai.config.includeStack = true;
-
-describe("CoreUtil", function () {
+const Ssh2Client = require('../../lib').Ssh2Client;
+const SftpClient = require('../../lib').SftpClient;
+describe("SftpCoreUtil", function () {
     before(function () {
         var variables = this;
-        variables.tempDir = FileTestUtil.mkdtemp();
+        variables.tempDir = TestUtil.createDirectory();
     });
 
     after(function () {
         var variables = this;
-        var tempDir = variables.tempDir;
-        FileTestUtil.rmrf(tempDir);
+        TestUtil.fs.rm({path: variables.tempDir.parent});
+    });
+
+    beforeEach(function () {
+        var variables = this;
+        variables.sftpCoreUtil = TestUtil.createSftpCoreUtil();
     });
 
     describe("ls()", function () {
-
-        beforeEach(function () {
-            var variables = this;
-            var ssh2Client = variables.ssh2Client = Ssh2ClientUtilTestUtil.createSsh2ClientUtil();
-            var sftpUtil, sftpCoreUtil;
-            return ssh2Client.connect()
-                .then(function () {
-                    return ssh2Client.getSftpUtil()
-                        .tap(function (_sftpUtil) {
-                            sftpUtil = variables.sftpUtil = _sftpUtil;
-                        })
-                })
-                .then(function () {
-                    return sftpUtil.getSftpCoreUtil()
-                        .tap(function (_sftpCoreUtil) {
-                            sftpCoreUtil = variables.sftpCoreUtil = _sftpCoreUtil;
-                        })
-                });
-        });
-
-        afterEach(function () {
-            var variables = this;
-            var ssh2Client = variables.ssh2Client;
-            return ssh2Client.end();
-        });
 
         describe("on a directory", function () {
 
             beforeEach(function () {
                 var variables = this;
                 var tempDir = variables.tempDir;
-
-                var tempFiles = variables.tempFiles = [];
-                var tempFilesContents = variables.tempFilesContents = [];
-                for (var i = 0; i < Math.ceil(Math.random() * 9) + 1; i++) {
-                    tempFiles[i] = _path.resolve(tempDir, FileTestUtil.randomString(10));
-                    tempFilesContents[i] = FileTestUtil.randomString(32);
-                    FileTestUtil.writeFileSync(tempFiles[i], tempFilesContents[i], {mode: SftpUtil.constants.S_IRWXU | SftpUtil.constants.S_IRWXG});
-                }
+                variables.tempFiles = TestUtil.generateRandomFiles({parent: tempDir.path});
             });
 
             it("should list files for the supplied directory path", function () {
@@ -88,9 +37,10 @@ describe("CoreUtil", function () {
                 var ssh2Client = variables.ssh2Client;
                 var sftpCoreUtil = variables.sftpCoreUtil;
                 var tempDir = variables.tempDir;
-
                 var tempFiles = variables.tempFiles;
-                return sftpCoreUtil.ls({path: tempDir})
+
+                var fileTree = variables.fileTree;
+                return sftpCoreUtil.ls({path: tempDir.path})
                     .catch(function (err) {
                         console.error(err);
                         throw err;
@@ -99,53 +49,34 @@ describe("CoreUtil", function () {
                     .then(function (files) {
                         console.log(util.inspect(files, {depth: null}));
 
-                        _.each(tempFiles, function (tempFile) {
-                            _.find(files, {path: tempFile}).should.not.be.undefined;
-                        })
+                        var check = function () {
+                            _.each(tempFiles, function (file, stats) {
+                                var value = _.find(files, {path: file.path});
+                                expect(value, 'Could not find file ' + file.path + ' in ls output').to.not.be.undefined;
+                            });
+                        };
+
+
+                        check.should.not.throw();
+
+
                     });
             });
         });
-
 
         describe("on a source directory path with target directory path and recursive = true", function () {
             beforeEach(function () {
                 var variables = this;
                 var tempDir = variables.tempDir;
-
-                var tempWorkDir = variables.tempWorkDir = _path.resolve(tempDir, FileTestUtil.randomString(10));
-                FileTestUtil.mkdir(tempWorkDir);
-
-                var tempSubDirs = variables.tempSubDirs = [];
-                var tempFiles = variables.tempFiles = [];
-                var tempFilesContents = variables.tempFilesContents = [];
-                for (var i = 0; i < Math.ceil(Math.random() * 9) + 1; i++) {
-                    tempSubDirs[i] = _path.resolve(tempWorkDir, FileTestUtil.randomString(10));
-
-                    FileTestUtil.mkdir(tempSubDirs[i]);
-
-                    for (var j = 0; j < Math.ceil(Math.random() * 9) + 1; j++) {
-                        tempFiles[j] = _path.resolve(tempSubDirs[i], FileTestUtil.randomString(10));
-                        tempFilesContents[j] = FileTestUtil.randomString(32);
-
-                        FileTestUtil.writeFileSync(tempFiles[j], tempFilesContents[j], {mode: SftpUtil.constants.S_IRWXU});
-                    }
-                }
+                variables.fileTree = TestUtil.createFileTree({path: tempDir.path});
             });
 
             it("should list a file tree recursively", function () {
                 var variables = this;
-                var ssh2Client = variables.ssh2Client;
                 var sftpCoreUtil = variables.sftpCoreUtil;
-                var tempWorkDir = variables.tempWorkDir;
+                var fileTree = variables.fileTree;
 
-                var tempSubDirs = variables.tempSubDirs;
-                var tempDir = variables.tempDir;
-                var tempFiles = variables.tempFiles;
-                var tempFilesContents = variables.tempFilesContents;
-
-                var tempWorkDirDestination = variables.tempWorkDirDestination = _path.resolve(tempDir, FileTestUtil.randomString(10));
-
-                return sftpCoreUtil.ls({path: tempWorkDir, recursive: true})
+                return sftpCoreUtil.ls({path: fileTree.path, recursive: true})
                     .catch(function (err) {
                         console.error(err);
                         throw err;
@@ -154,13 +85,19 @@ describe("CoreUtil", function () {
                     .then(function (files) {
                         console.log(util.inspect(files, {depth: null}));
 
-                        _.each(tempFiles, function (tempFile) {
-                            _.find(files, {path: tempFile}).should.not.be.undefined;
-                        })
+                        var check = function () {
+                            TestUtil.walkFileTree(fileTree, function (file, stats) {
+                                var value = _.find(files, {path: file.path});
+                                expect(value, 'Could not find file ' + file.path + ' in ls output').to.not.be.undefined;
+                            });
+                        };
+
+                        check.should.not.throw();
+
+
                     })
             });
         })
-
 
     });
 
